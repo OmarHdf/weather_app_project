@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Météo pour {{ weather.city }}</title>
+</head>
+<body>
+    <h1>Météo pour {{ weather.city }}</h1>
+    <ul>
+        <li>Température: {{ weather.temperature }}°C</li>
+        <li>Pression: {{ weather.pressure }} hPa</li>
+        <li>Humidité: {{ weather.humidity }}%</li>
+        <li>Description: {{ weather.description }}</li>
+    </ul>
+    <a href="/">Revenir à l'accueil</a>
+</body>
+</html>

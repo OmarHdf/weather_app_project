@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Météo App</title>
+</head>
+<body>
+    <h1>Application Météo</h1>
+    <form method="POST">
+        <label for="city">Entrez le nom de la ville :</label>
+        <input type="text" id="city" name="city" required>
+        <button type="submit">Obtenir la météo</button>
+    </form>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+ <footer>
+        <p>© 2024 OmAI. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
