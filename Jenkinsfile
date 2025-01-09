@@ -1,85 +1,90 @@
-
 pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "weather_app"
-        DOCKER_CREDENTIALS = credentials('docker-hub-credentials') 
-        
+        // Variables d'environnement pour les credentials Docker
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')  // Utilisation de l'ID de credential pour Docker Hub
+        SONARQUBE = 'SonarQube'  // Nom de la configuration SonarQube dans Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Récupère le code du dépôt Git
+                // Checkout du code depuis GitHub
                 checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build') {
             steps {
-                // Installe les dépendances nécessaires
-                sh 'pip install -r requirements.txt'
+                // Installation des dépendances et construction de l'image Docker
+                script {
+                    sh 'pip install -r requirements.txt'
+                    sh 'docker build -t weather_app .'
+                }
             }
         }
 
-        stage('Static Code Analysis') {
+        stage('SonarQube Scan') {
             steps {
-                // Analyse le code avec des outils comme Bandit
-                sh 'bandit -r .'
+                // Exécution du scan SonarQube pour l'analyse de code
+                script {
+                    withSonarQubeEnv(SONARQUBE) {
+                        sh 'mvn sonar:sonar -Dsonar.projectKey=weather_app_project -Dsonar.sources=.'
+                    }
+                }
             }
         }
 
-        stage('Unit Tests') {
+        stage('Security Scan with Trivy') {
             steps {
-                // Exécute les tests unitaires
-                sh 'pytest'
+                // Exécution du scan de sécurité avec Trivy sur l'image Docker
+                script {
+                    sh 'docker pull aquasec/trivy'
+                    sh 'trivy image --severity HIGH,CRITICAL weather_app'
+                }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Test') {
             steps {
-                // Construire l'image Docker
-                sh 'docker build -t $IMAGE_NAME .'
-            }
-        }
-
-        stage('Security Scanning') {
-            steps {
-                // Analyse de sécurité avec Trivy
-                sh 'trivy image $IMAGE_NAME'
+                // Exécution des tests unitaires
+                script {
+                    sh 'pytest tests'
+                }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                // Pousser l'image sur Docker Hub
-                sh """
-                docker login -u $DOCKER_CREDENTIALS_USR -p $DOCKER_CREDENTIALS_PSW
-                docker tag $IMAGE_NAME $DOCKER_CREDENTIALS_USR/$IMAGE_NAME:latest
-                docker push $DOCKER_CREDENTIALS_USR/$IMAGE_NAME:latest
-                """
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                // Déployer l'application
-                sh 'docker run -d -p 5000:5000 $IMAGE_NAME'
+                // Push de l'image Docker sur Docker Hub
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                        sh 'docker tag weather_app $DOCKER_USERNAME/weather_app:latest'
+                        sh 'docker push $DOCKER_USERNAME/weather_app:latest'
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline terminé'
+            // Nettoyage du workspace après l'exécution du pipeline
+            cleanWs()
         }
+
         success {
+            // Actions à effectuer en cas de succès
             echo 'Pipeline réussi !'
         }
+
         failure {
-            echo 'Pipeline échoué.'
+            // Actions à effectuer en cas d'échec
+            echo 'Le pipeline a échoué.'
         }
-   
+    }
 }
-}
+
+
