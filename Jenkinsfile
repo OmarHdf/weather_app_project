@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Variables d'environnement pour les credentials Docker
-        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')  // Utilisation de l'ID de credential pour Docker Hub
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')  // Utilisation des credentials Docker Hub
         SONARQUBE = 'SonarQube'  // Nom de la configuration SonarQube dans Jenkins
     }
 
@@ -15,11 +14,23 @@ pipeline {
             }
         }
 
+        stage('Install Python and Pip') {
+            steps {
+                script {
+                    // Installation de Python et pip si nécessaire
+                    sh '''
+                    apt-get update
+                    apt-get install -y python3 python3-pip
+                    '''
+                }
+            }
+        }
+
         stage('Build') {
             steps {
-                // Installation des dépendances et construction de l'image Docker
                 script {
-                    sh 'pip install -r requirements.txt'
+                    // Installation des dépendances et construction de l'image Docker
+                    sh 'pip3 install -r requirements.txt'
                     sh 'docker build -t weather_app .'
                 }
             }
@@ -27,8 +38,8 @@ pipeline {
 
         stage('SonarQube Scan') {
             steps {
-                // Exécution du scan SonarQube pour l'analyse de code
                 script {
+                    // Exécution du scan SonarQube pour l'analyse de code
                     withSonarQubeEnv(SONARQUBE) {
                         sh 'mvn sonar:sonar -Dsonar.projectKey=weather_app_project -Dsonar.sources=.'
                     }
@@ -38,8 +49,8 @@ pipeline {
 
         stage('Security Scan with Trivy') {
             steps {
-                // Exécution du scan de sécurité avec Trivy sur l'image Docker
                 script {
+                    // Exécution du scan de sécurité avec Trivy sur l'image Docker
                     sh 'docker pull aquasec/trivy'
                     sh 'trivy image --severity HIGH,CRITICAL weather_app'
                 }
@@ -48,8 +59,8 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Exécution des tests unitaires
                 script {
+                    // Exécution des tests unitaires avec pytest
                     sh 'pytest tests'
                 }
             }
@@ -57,8 +68,8 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                // Push de l'image Docker sur Docker Hub
                 script {
+                    // Push de l'image Docker sur Docker Hub avec les credentials
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
                         sh 'docker tag weather_app $DOCKER_USERNAME/weather_app:latest'
