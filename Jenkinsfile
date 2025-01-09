@@ -1,23 +1,4 @@
-Voici un exemple de **Jenkinsfile** que vous pouvez ajouter à votre projet pour mettre en place un pipeline DevSecOps. Ce pipeline inclut des étapes pour l'analyse de sécurité, les tests unitaires et le déploiement.
 
-### **1. Créer le fichier Jenkinsfile**
-Dans votre projet, créez un fichier nommé `Jenkinsfile` :
-
-```bash
-touch Jenkinsfile
-```
-
-Ensuite, éditez le fichier avec votre éditeur préféré :
-
-```bash
-nano Jenkinsfile
-```
-
----
-
-### **2. Exemple de contenu pour le Jenkinsfile**
-
-```groovy
 pipeline {
     agent any
 
