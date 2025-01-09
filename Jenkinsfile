@@ -19,8 +19,8 @@ pipeline {
                 script {
                     // Installation de Python et pip si nécessaire
                     sh '''
-                    apt-get update
-                    apt-get install -y python3 python3-pip
+                    sudo apt-get update
+                    sudo apt-get install -y python3 python3-pip
                     '''
                 }
             }
