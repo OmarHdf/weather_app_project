@@ -4,7 +4,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "weather_app"
-        DOCKER_CREDENTIALS = credentials('docker-hub-credentials') // Configurer dans Jenkins
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials') 
+        
     }
 
     stages {
